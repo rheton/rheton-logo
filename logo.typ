@@ -15,6 +15,10 @@
 // Only used when bg == "transparent" — with a black/white background the
 // wordmark color is forced for contrast (see fg-color below) instead.
 #let text-color = sys.inputs.at("text-color", default: "black") // "black" | "white"
+// Only used for icon-only (text=false) renders — rounds the square
+// canvas's background into an app-icon-style rounded square instead of
+// a sharp-cornered one. Has no effect on the icon+text lockup.
+#let corners = sys.inputs.at("corners", default: "sharp") // "sharp" | "rounded"
 // -----------------------------------------------------------------------
 
 // -- code-only tuning ----------------------------------------------------
@@ -118,12 +122,31 @@
 // otherwise auto-size the page to. The wordmark lockup keeps auto-sizing
 // to its own (wider) content.
 #let square-side = calc.max(icon-w, icon-h) + 2 * page-margin
+// A typical app-icon-style radius (iOS uses roughly this fraction of the
+// icon's side).
+#let corner-radius = if corners == "rounded" { square-side * 0.22 } else { 0pt }
+
+// For the square icon-only canvas the background is drawn explicitly (as
+// a — possibly rounded — rect) rather than via page `fill`, since a page
+// fill always has sharp corners. The text lockup keeps using page fill
+// directly, unaffected by --corners.
+// `place()` positions relative to the page's content area (inside the
+// margin), not the true page corners — so for the icon-only canvas the
+// margin is 0 here and baked into square-side (added above) instead,
+// otherwise the background rect would sit inset on its top/left edges
+// but overflow (and get clipped) on its bottom/right edges.
 #set page(
   width: if show-text { auto } else { square-side },
   height: if show-text { auto } else { square-side },
-  margin: page-margin,
-  fill: bg-color,
+  margin: if show-text { page-margin } else { 0pt },
+  fill: if show-text { bg-color } else { none },
 )
+
+#if not show-text [
+  #place(top + left)[
+    #rect(width: square-side, height: square-side, radius: corner-radius, fill: bg-color)
+  ]
+]
 
 #align(center + horizon)[
   #if show-text {
