@@ -45,7 +45,7 @@
   rgb("#000000")
 }
 
-#set page(width: auto, height: auto, margin: 28pt, fill: bg-color)
+#let page-margin = 28pt
 #set text(font: "Hanken Grotesk")
 
 // -- wave icon -------------------------------------------------------------
@@ -111,6 +111,19 @@
   weight: "bold",
   tracking: 0.6pt,
 )[rheton]
+
+// Icon-only renders get a square canvas (sized to the icon's longer
+// side) so the mark sits centered with even padding on all sides,
+// instead of the wide rectangle its natural (non-square) shape would
+// otherwise auto-size the page to. The wordmark lockup keeps auto-sizing
+// to its own (wider) content.
+#let square-side = calc.max(icon-w, icon-h) + 2 * page-margin
+#set page(
+  width: if show-text { auto } else { square-side },
+  height: if show-text { auto } else { square-side },
+  margin: page-margin,
+  fill: bg-color,
+)
 
 #align(center + horizon)[
   #if show-text {
